@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://i46h73ak4s6c"]
+
+[ext_resource type="Script" path="res://src/small-cl.gd" id="1_jss33"]
+
+[node name="Node" type="Node"]
+script = ExtResource("1_jss33")

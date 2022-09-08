@@ -1,0 +1,3 @@
+[submodule "local/godot-ser"]
+	path = local/godot-ser
+	url = git@github.com:vcanadi/godot-ser

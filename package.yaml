@@ -1,0 +1,56 @@
+name:               small-clsr
+version:            0.1.0.0
+license:            NONE
+author:             Vito Canadi
+maintainer:         vito.canadi@gmail.com
+extra-source-files: CHANGELOG.md
+synopsis:           Small client/server example in Godot and Haskell
+
+dependencies:
+  - base
+  - bytestring
+  - containers
+  - network
+  - linear
+  - lens
+  - text
+  - godot-ser
+  - data-default
+  - text
+  - utf8-string
+  - store
+  - pretty-simple
+  - attoparsec
+
+default-extensions:
+  - LambdaCase
+  - OverloadedStrings
+  - DefaultSignatures
+  - ScopedTypeVariables
+  - TypeApplications
+  - DeriveGeneric
+  - StandaloneDeriving
+
+
+library:
+  source-dirs: src
+
+executable small-cli:
+  main-is: Main.hs
+  dependencites: [ base ]
+  source-dirs: [ app/cli]
+
+executable small-srv:
+  main-is: Main.hs
+  dependencites: [ base ]
+  source-dirs: [ app/srv]
+
+tests:
+  spec:
+    build-depends:
+    - base
+    - hspec
+    - small-clsr
+    main: Spec.hs
+    source-dirs: spec
+version: 0.1.0.0
