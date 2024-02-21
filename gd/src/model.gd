@@ -16,7 +16,7 @@ class Model:
     j=fposmod(j+dj, m)
 
   func moveInDir(mdir: Dir.MDir):
-    print("moveInDir"+mdir.show())
+    # print("moveInDir"+mdir.show())
     if mdir.isJust:
       match mdir.dir:
         Dir.Dir.L: self.move(-1,0)

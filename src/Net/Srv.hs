@@ -33,11 +33,10 @@ listenToClients sock = f
       case decodeMsg cliMsgRaw of
         Left err -> logRecv  (show err)
         Right cliMsg -> do
-          let (msg, newClients) = processCliMsg cliAddr cliMsg  clients
+          let newClients = processCliMsg cliAddr cliMsg  clients
           logRecv  "Current State:"
-          logMsg srvAddr $ encodeMsg $ SRV_GET_STATE newClients
+          logMsg srvAddr $ encodeMsg $ PUT_STATE newClients
           putStrLn $ displayMap newClients
-          -- lPutStrLn $ "Will respond with: " <> show msg
           forM_ (toList newClients) $ \(cl,_) ->
-            sendTo sock (encodeMsg $ SRV_GET_STATE newClients) cl
+            sendTo sock (encodeMsg $ PUT_STATE newClients) cl
           f newClients

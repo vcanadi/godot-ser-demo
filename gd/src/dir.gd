@@ -18,7 +18,7 @@ class MDir:
     return MDir.new()
 
 static func keyToDir(key: Key) -> MDir:
-  print(KEY_A)
+  # print(KEY_A)
   match key:
     KEY_A: return MDir.just(Dir.L)
     KEY_D: return MDir.just(Dir.R)
@@ -35,3 +35,10 @@ static func dirToMove(dir: Dir) -> Vector2i:
     _:     return Vector2i(0,0)
   return Vector2i(0,0)
 
+static func show(dir: Dir) -> String:
+  match dir:
+    Dir.L: return "L"
+    Dir.R: return "R"
+    Dir.U: return "U"
+    Dir.D: return "D"
+    _:     return ""

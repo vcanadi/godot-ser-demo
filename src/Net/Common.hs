@@ -26,19 +26,19 @@ srvAddr :: SockAddr
 srvAddr = SockAddrInet 5000 (tupleToHostAddress (127,0,0,1))
 
 data CliMsg
-  = CLI_JOIN
-  | CLI_LEAVE
-  | CLI_MOVE Dir
-  | CLI_GET_STATE
+  = JOIN
+  | LEAVE
+  | MOVE Dir
+  | GET_STATE
   deriving (Show, Eq, Read, Generic)
 
 instance Bounded CliMsg where
-  minBound = CLI_JOIN
-  maxBound = CLI_GET_STATE
+  minBound = JOIN
+  maxBound = GET_STATE
 
 instance Enum CliMsg where
-  toEnum = (([ CLI_JOIN, CLI_LEAVE] <> (CLI_MOVE <$> [minBound..maxBound]) <>  [CLI_GET_STATE]) !!)
-  fromEnum = fromJust . (`elemIndex` ([ CLI_JOIN, CLI_LEAVE] <> (CLI_MOVE <$> [minBound..maxBound]) <>  [CLI_GET_STATE]))
+  toEnum = (([ JOIN, LEAVE] <> (MOVE <$> [minBound..maxBound]) <>  [GET_STATE]) !!)
+  fromEnum = fromJust . (`elemIndex` ([ JOIN, LEAVE] <> (MOVE <$> [minBound..maxBound]) <>  [GET_STATE]))
 
 instance Store CliMsg
 instance Serializable CliMsg
@@ -46,12 +46,7 @@ instance Serializable CliMsg
 cliMsgs:: [CliMsg]
 cliMsgs = [minBound..maxBound]
 
-data SrvMsg
-  = SRV_JOIN
-  | SRV_LEAVE
-  | SRV_MOVE
-  | SRV_INC
-  | SRV_GET_STATE State
+newtype SrvMsg = PUT_STATE State
   deriving (Show, Eq, Generic)
 
 instance Serializable PortNumber where
@@ -80,13 +75,12 @@ encodeSrvMsg :: (Serializable a) => a -> ByteString
 encodeSrvMsg = ser
 
 -- | Main function that updates server state based on client message and returns response
-processCliMsg :: SockAddr -> CliMsg -> State -> (SrvMsg, State)
-processCliMsg cliAddr CLI_JOIN      state = (SRV_JOIN, insert cliAddr def state)
-processCliMsg cliAddr CLI_LEAVE     state = (SRV_LEAVE, delete cliAddr state)
-processCliMsg cliAddr CLI_GET_STATE state = (SRV_GET_STATE state , state)
-processCliMsg cliAddr (CLI_MOVE d)  state = (SRV_INC, adjust (moveInDir $ Just d) cliAddr state)
+processCliMsg :: SockAddr -> CliMsg -> State -> State
+processCliMsg cliAddr JOIN      state = insert cliAddr def state
+processCliMsg cliAddr LEAVE     state = delete cliAddr state
+processCliMsg cliAddr GET_STATE state = state
+processCliMsg cliAddr (MOVE d)  state = adjust (moveInDir $ Just d) cliAddr state
 
 -- | Main function that updates client state based on server message and returns response
 processSrvMsg :: SockAddr -> SrvMsg -> String
-processSrvMsg srvAddr (SRV_GET_STATE state) =  displayMap state
-processSrvMsg srvAddr rsp = "Got rsp from srv: " <> show rsp
+processSrvMsg srvAddr (PUT_STATE state) =  displayMap state

@@ -1,57 +1,54 @@
 
 const Dir = preload("../dir.gd")
 
-enum CliMsgType { CLI_JOIN, CLI_LEAVE, CLI_MOVE, CLI_GET_STATE }
-
+# Sum data type (constructior enum * variant)
 class CliMsg:
-  var cliMsgType: CliMsgType
-  var cliDir: Dir.Dir
+  # Sum type constructor
+  enum Con { JOIN, LEAVE, MOVE, GET_STATE }
+  var con: Con             # Select constructor
+  var moveDir: Dir.Dir  # MOVE constructor's payload
+                           # Other possible constructors' payloads would be here
 
-  static func join():
-    var m = CliMsg.new()
-    m.cliMsgType = CliMsgType.CLI_JOIN
-    return m
-
-  static func leave():
-    var m = CliMsg.new()
-    m.cliMsgType = CliMsgType.CLI_LEAVE
-    return m
-
-  static func move(dir: Dir.Dir):
-    var m = CliMsg.new()
-    m.cliMsgType = CliMsgType.CLI_MOVE
-    m.cliDir = dir
-    return m
+  # Sum type interface
+  static func join()             -> CliMsg: var m = CliMsg.new(); m.con = Con.JOIN; return m
+  static func leave()            -> CliMsg: var m = CliMsg.new(); m.con = Con.LEAVE; return m
+  static func move(dir: Dir.Dir) -> CliMsg: var m = CliMsg.new(); m.con = Con.MOVE; m.moveDir = dir; return m
+  static func getState()         -> CliMsg: var m = CliMsg.new(); m.con = Con.GET_STATE; return m
 
   func show() -> String:
-    match self.cliMsgType:
-      CliMsgType.CLI_JOIN: return "CLI_JOIN"
-      CliMsgType.CLI_LEAVE: return "CLI_LEAVE"
-      CliMsgType.CLI_MOVE:
-        match self.cliDir:
-          Dir.Dir.L: return "CLI_MOVE L"
-          Dir.Dir.R: return "CLI_MOVE R"
-          Dir.Dir.U: return "CLI_MOVE U"
-          Dir.Dir.D: return "CLI_MOVE D"
-          _: return "ERR"
-      CliMsgType.CLI_GET_STATE: return "CLI_GET_STATE"
-      _: return "ERR"
+    match self.con:
+     Con.JOIN: return "JOIN"
+     Con.LEAVE: return "LEAVE"
+     Con.MOVE: return "MOVE " + Dir.show(self.moveDir)
+     Con.GET_STATE: return "GET_STATE"
+     _: return "ERR"
 
-  func ser() -> PackedByteArray:
-    match self.cliMsgType:
-      CliMsgType.CLI_JOIN: return [0]
-      CliMsgType.CLI_LEAVE: return [1]
-      CliMsgType.CLI_MOVE:
-        match self.cliDir:
-          Dir.Dir.L: return [2,0]
-          Dir.Dir.R: return [2,1]
-          Dir.Dir.U: return [2,2]
-          Dir.Dir.D: return [2,3]
-          _: return [-1]
-      CliMsgType.CLI_GET_STATE: return [3]
-      _: return [-1]
+  # Byte serialization of CliMsg
+  static func ser(m: CliMsg) -> PackedByteArray:
+    return var_to_bytes(serArr(m))
 
+  # Byte deserialization of CliMsg
+  static func des(bs: PackedByteArray) -> CliMsg:
+    return desArr(bytes_to_var(bs))
 
+  # Easier serializaition of CliMSg into intermediate format
+  static func serArr(m: CliMsg) -> Array:
+    if m.con == Con.MOVE:
+      return [m.con, m.moveDir]
+    else:
+      return [m.con]
+
+  # Easier deserializaition of CliMSg from intermediate format
+  static func desArr(arr: Array) -> CliMsg:
+    var m: CliMsg = CliMsg.new()
+    m.con = arr[0]
+    if arr.size() > 1:
+      m.moveDir = arr[1]
+    return m
+
+#class SrvMsg:
+#  var state: State
+#
 #class State:
 #  var clientMap: Dictionary
 #
@@ -61,6 +58,8 @@ class CliMsg:
 #
 #  func ser() -> PackedByteArray:
 #     return [0]
+#
+#  func des()
 
 #func des(bs: PackedByteArray) -> State:
 #  match bs:
