@@ -33,7 +33,7 @@ displayMap state  = "\n" <> concat
   [ concat
     [ displayField i j
     | i <- [0..pred n]] <> "\n"
-  | j<-[0..pred m]]
+  | j<- reverse [0..pred m]]
   where
     displayField i j= if Model i j `notElem` elems state then "_" else "X"
 
@@ -55,8 +55,8 @@ move di dj (Model i j) = Model ((i + di) `mod` n) ( (j + dj) `mod` m)
 moveInDir :: Maybe Dir -> Model -> Model
 moveInDir (Just L) = move (-1)   0
 moveInDir (Just R) = move   1    0
-moveInDir (Just U) = move   0  (-1)
-moveInDir (Just D) = move   0    1
+moveInDir (Just U) = move   0    1
+moveInDir (Just D) = move   0  (-1)
 moveInDir _ = id
 
 initModel = Model 2 2

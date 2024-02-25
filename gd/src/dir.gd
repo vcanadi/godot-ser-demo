@@ -28,10 +28,10 @@ static func keyToDir(key: Key) -> MDir:
 
 static func dirToMove(dir: Dir) -> Vector2i:
   match dir:
-    Dir.L: return Vector2i(0,-1)
-    Dir.R: return Vector2i(0,1)
-    Dir.U: return Vector2i(1,0)
-    Dir.D: return Vector2i(-1,0)
+    Dir.L: return Vector2i(-1,0)
+    Dir.R: return Vector2i(1,0)
+    Dir.U: return Vector2i(0,1)
+    Dir.D: return Vector2i(0,-1)
     _:     return Vector2i(0,0)
   return Vector2i(0,0)
 

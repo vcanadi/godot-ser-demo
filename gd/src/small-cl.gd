@@ -1,79 +1,35 @@
 extends Node
 
 const Net = preload("net/common.gd")
+const Test = preload("net/test.gd")
 const Dir = preload("dir.gd")
-const M = preload("model.gd")
 
-
-var model: M.Model = M.Model.new(0,0)
+var state: Net.State = Net.State.new([])
 
 const HOST: String = "127.0.0.1"
 const PORT: int = 5000
 
 var udp := PacketPeerUDP.new()
 
-var position: Vector2i = Vector2i(5,0)
-
-class A extends Object:
-  var x: bool = false
-
 func _ready():
+  Test.run_tests()
+
   udp.connect_to_host(HOST, PORT)
-  var msg: Net.CliMsg = Net.CliMsg.join()
-  # Test serialization -> deserialization
-  print(Net.CliMsg.des(Net.CliMsg.ser(msg)).show())
-  udp.put_packet(Net.CliMsg.ser(msg))
-
-  #print(desDictionary([10,75,148,72,1,0,0,0]).show())
-
-  # var x: float = 1
-  # var arr : PackedByteArray = [97,97,0,0,0]
-  # var s: String = "a" # arr.get_string_from_utf8()
-  #var m = [14, "a"]
-  # var d: Dir.Dir = Dir.Dir.D
-  #var a = A.new()
-  #print(a)
-
-  #print(var_to_bytes(a))
-  #var res: int = bytes_to_var(PackedByteArray([2,0,0,0,255,255,255,255,255,255,255,255]))
-  #print(res)
-
-var cliMgs: Net.CliMsg
+  udp.put_packet(Net.CliMsg.ser(Net.CliMsg.join()))
 
 func _input(ev):
   if ev is InputEventKey and ev.pressed:
     var mdir: Dir.MDir = Dir.keyToDir(ev.keycode)
-    model.moveInDir(mdir)
-    #print(model.show())
+    # state ... .moveInDir(mdir) # TODO. Move  this client in the local state
     if mdir.isJust:
-      #print(Net.CliMsg.move(mdir.dir).show())
-      print(Net.CliMsg.des(Net.CliMsg.ser(Net.CliMsg.move(mdir.dir))).show())
+      # If there is some movement, send to server
+      #print(state.display())      # Render local state on key change
       udp.put_packet(Net.CliMsg.ser(Net.CliMsg.move(mdir.dir)))
 
 func _process(dt):
   if udp.get_available_packet_count() > 0:
-    var ba = udp.get_packet()
-    #print("Srv rsp: %s" % ba)
-
-
-#class MDictionary:
-#  var val: Dictionary
-#  var isJust: bool = false
-#  func show():
-#    if self.isJust: return ("Just " + str(val))
-#    else: return "Nothing"
-#  static func just(val): var mval = new(); mval.isJust = true; mval.val= val; return mval
-#  static func nothing(): return new()
-#
-#func desDictionary(bs: PackedByteArray) ->  MDictionary:
-#  if bs.slice(0,4) == PackedByteArray([10,75,148,72]):
-#    print(bs.slice(4,12))
-#    var n = bs.decode_u8(5)
-#    print("n:" + str(n))
-#    return MDictionary.just({})
-#  else: return MDictionary.nothing()
-
-
-
-
-
+    var bs = udp.get_packet()
+    var srvMsg: Net.SrvMsg = Net.SrvMsg.desArr(Net.bytes_to_arr(bs))
+    # print("Srv rsp: %s" % srvMsg.show())
+    state = srvMsg.state # Override state on server update
+    print(state.display())

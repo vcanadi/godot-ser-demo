@@ -10,11 +10,10 @@ config_version=5
 
 [application]
 
-config/name="small-cl"
+config/name="godot-ser-demo"
 run/main_scene="res://Main.tscn"
 config/features=PackedStringArray("4.2", "Mobile")
 config/icon="res://icon.svg"
-full_objects=true
 
 [display]
 
