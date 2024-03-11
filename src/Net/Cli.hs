@@ -1,8 +1,10 @@
+{-# LANGUAGE LambdaCase #-}
 module Net.Cli where
 
 import Net.Common
-import Net.Utils
-import Net.Logger
+    ( CliMsg, srvAddr, decodeMsg, encodeMsg, processSrvMsg, charToCliMsg )
+import Net.Utils ( readEnumSkewed )
+import Net.Logger ( logMsg, logRecv, logSend )
 
 -- client.hs
 import GHC.IO.Handle (hFlush)
@@ -14,14 +16,19 @@ import Network.Socket.ByteString.Lazy()
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as C
 import Network.Socket
+    ( socket,
+      defaultProtocol,
+      Family(AF_INET),
+      Socket,
+      SocketType(Datagram) )
 import Control.Concurrent (threadDelay, forkIO)
-import System.IO
+import System.IO ( hSetBuffering, stdin, BufferMode(NoBuffering) )
 import System.Environment (getArgs)
 import Control.Lens.At(ix)
-import Control.Lens
 import Text.Read(readMaybe)
 import Data.ByteString.Char8(unpack)
 import Control.Monad(forever, void)
+import Control.Arrow ((>>>))
 
 
 main :: IO ()
@@ -36,12 +43,10 @@ main = do
 sendThread :: Socket -> IO ()
 sendThread sock =
   forever $ do
-    logSend $ "Select message to send: "
-            <> show (zipWith (\i cm -> show i <> ". " <> show cm ) [1..] cliMsgs)
-    (cliMsgMb :: Maybe CliMsg) <- readEnumSkewed 1 . pure <$> getChar
-    case cliMsgMb of
-      Nothing -> logSend "Invalid index"
-      Just cliMsg -> do
+    logSend "Select message to send (1 - JOIN, 2 - LEAVE, 3 - GET_STATE, WASD - move):"
+    (getChar >>=) $ charToCliMsg >>> \case
+      Left err -> logSend err
+      Right cliMsg -> do
         bytesSent <- sendTo sock (encodeMsg cliMsg) srvAddr
         logSend $ "Send nbr of bytes: " <> show bytesSent
 

@@ -3,7 +3,7 @@ module Net.Srv where
 import Net.Common
 import Net.Utils
 import Net.Logger
-import Model(displayMap)
+import Model(displayModel, Model)
 
 import Network.Socket
 import Network.Socket.ByteString
@@ -22,7 +22,7 @@ main = do
 -- | For a given socket and a current client list,
 -- listen to client messages and update state accordingly
 -- Update(send a message) to clients when needed
-listenToClients :: Socket -> State -> IO ()
+listenToClients :: Socket -> Model -> IO ()
 listenToClients sock = f
   where
     f clients = do
@@ -34,9 +34,9 @@ listenToClients sock = f
         Left err -> logRecv  (show err)
         Right cliMsg -> do
           let newClients = processCliMsg cliAddr cliMsg  clients
-          logRecv  "Current State:"
+          logRecv  "Current state:"
           logMsg srvAddr $ encodeMsg $ PUT_STATE newClients
-          putStrLn $ displayMap newClients
+          putStrLn $ displayModel newClients
           forM_ (toList newClients) $ \(cl,_) ->
             sendTo sock (encodeMsg $ PUT_STATE newClients) cl
           f newClients

@@ -41,20 +41,20 @@ class CliMsg extends Object:
     return m
 
 class SrvMsg extends Object:
-  var state: State
+  var model: Model
 
   # SrvMsg constructor
-  func _init(s: State): state = s
-  func eq(sm: SrvMsg): return state.eq(sm.state)
+  func _init(md: Model): model = md
+  func eq(sm: SrvMsg): return model.eq(sm.model)
 
-  func serArr() -> Array: return state.serArr()
-  static func desArr(arr: Array) -> SrvMsg: return SrvMsg.new(State.desArr(arr))
-  func show(): return state.show()
+  func serArr() -> Array: return model.serArr()
+  static func desArr(arr: Array) -> SrvMsg: return SrvMsg.new(Model.desArr(arr))
+  func show(): return model.show()
 
-class State extends Object:
+class Model extends Object:
   var clientMap: Array[CliInfo]
   func _init(cm: Array[CliInfo]): clientMap = cm
-  func eq(st: State):
+  func eq(st: Model):
     if clientMap.size() != st.clientMap.size(): return false
     for i in range(clientMap.size()):
       if clientMap[i].eq(st.clientMap[i]) == false:
@@ -63,31 +63,31 @@ class State extends Object:
 
   func display() -> String:
     var s: String = ""
-    for _j in range(Model.m-1,-1,-1):
-      for _i in range(Model.n):
-        s += ("X" if clientMap.any(func(ci): return ci.model.i == _i and ci.model.j == _j) else " ") + "|"
+    for _j in range(Pos.m-1,-1,-1):
+      for _i in range(Pos.n):
+        s += ("X" if clientMap.any(func(ci): return ci.pos.i == _i and ci.pos.j == _j) else " ") + "|"
       s+="\n"
     return s
 
   func serArr() -> Array: return clientMap.map(func (ci): return ci.serArr())
-  static func desArr(arr: Array) -> State:
+  static func desArr(arr: Array) -> Model:
     var newArr: Array[CliInfo] = []
     for ciSer in arr:
       newArr.push_back(CliInfo.desArr(ciSer))
-    return State.new(newArr)
-    #return State.new(arr.map(CliInfo.desArr)) # This should work
+    return Model.new(newArr)
+    #return Model.new(arr.map(CliInfo.desArr)) # This should work
 
   func show(): return clientMap.reduce(func(s, ci): return s + " " + ci.show(), "")
 
 class CliInfo extends Object:
   var sockAddr: SockAddr
-  var model: Model
-  func _init(sa: SockAddr, m: Model): sockAddr=sa; model=m
-  func eq(ci: CliInfo): return sockAddr.eq(ci.sockAddr) && model.eq(ci.model)
+  var pos: Pos
+  func _init(sa: SockAddr, p: Pos): sockAddr=sa; pos=p
+  func eq(ci: CliInfo): return sockAddr.eq(ci.sockAddr) && pos.eq(ci.pos)
 
-  func serArr() -> Array: return [sockAddr.serArr(), model.serArr()]
-  static func desArr(arr: Array) -> CliInfo: return CliInfo.new(SockAddr.desArr(arr[0]), Model.desArr(arr[1]))
-  func show(): return (sockAddr.show() + " " + model.show())
+  func serArr() -> Array: return [sockAddr.serArr(), pos.serArr()]
+  static func desArr(arr: Array) -> CliInfo: return CliInfo.new(SockAddr.desArr(arr[0]), Pos.desArr(arr[1]))
+  func show(): return (sockAddr.show() + " " + pos.show())
 
 
 # Sum type
@@ -106,7 +106,7 @@ class SockAddr extends Object:
 
   func show(): return (str(port) + " " + str(host))
 
-class Model extends Object:
+class Pos extends Object:
   static var n = 10
   static var m = 10
   var i: int
@@ -134,10 +134,10 @@ class Model extends Object:
       s+="\n"
     return s
 
-  func eq(m: Model): return i==m.i && j ==m.j
+  func eq(pos: Pos): return i==pos.i && j ==pos.j
 
   func serArr() -> Array: return [i, j]
-  static func desArr(arr: Array) -> Model: return Model.new(arr[0], arr[1])
+  static func desArr(arr: Array) -> Pos: return Pos.new(arr[0], arr[1])
 
   func show(): return (str(i) + " " + str(j))
 

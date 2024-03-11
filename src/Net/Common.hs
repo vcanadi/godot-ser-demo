@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 module Net.Common where
 
 import Net.Utils
@@ -12,15 +13,14 @@ import Data.Map.Strict (Map, insert, adjust, delete)
 import Text.Read (readEither, readMaybe)
 import Data.ByteString.Char8(unpack)
 import Data.ByteString.UTF8 (fromString)
-import Data.Store
 import GHC.Generics (Generic)
 import Control.Arrow (ArrowChoice(left))
-import Model ( Model, Dir, displayMap, moveInDir )
-import Data.Default
+import Model ( Loc, Dir(..), displayModel, moveInDir, Model, readDir )
+import Data.Default ( Default(def) )
 import Control.Lens ((%~))
 import Data.Maybe (fromJust)
 import Data.List (elemIndex)
-import Data.Godot.Serialize
+import Data.Godot.Serialize ( Serializable(ser, des) )
 
 srvAddr :: SockAddr
 srvAddr = SockAddrInet 5000 (tupleToHostAddress (127,0,0,1))
@@ -30,37 +30,18 @@ data CliMsg
   | LEAVE
   | MOVE Dir
   | GET_STATE
-  deriving (Show, Eq, Read, Generic)
+  deriving (Show, Eq, Read, Generic, Serializable)
 
-instance Bounded CliMsg where
-  minBound = JOIN
-  maxBound = GET_STATE
+charToCliMsg :: Char -> Either String CliMsg
+charToCliMsg '1' = Right JOIN
+charToCliMsg '2' = Right LEAVE
+charToCliMsg '3' = Right GET_STATE
+charToCliMsg c = case readDir c of
+                   Nothing -> Left "Invalid CliMsg Char"
+                   Just d -> Right $ MOVE d
 
-instance Enum CliMsg where
-  toEnum = (([ JOIN, LEAVE] <> (MOVE <$> [minBound..maxBound]) <>  [GET_STATE]) !!)
-  fromEnum = fromJust . (`elemIndex` ([ JOIN, LEAVE] <> (MOVE <$> [minBound..maxBound]) <>  [GET_STATE]))
-
-instance Store CliMsg
-instance Serializable CliMsg
-
-cliMsgs:: [CliMsg]
-cliMsgs = [minBound..maxBound]
-
-newtype SrvMsg = PUT_STATE State
-  deriving (Show, Eq, Generic)
-
-instance Serializable PortNumber where
-  ser port = ser @Word16 $ fromIntegral port
-  desP = fromIntegral <$> desP @Word16
-
-deriving instance Generic SockAddr
-instance Serializable SockAddr
-
-instance Store SockAddr
-instance Store SrvMsg
-instance Serializable SrvMsg
-
-type State = Map SockAddr Model
+newtype SrvMsg = PUT_STATE Model
+  deriving (Show, Eq, Generic, Serializable)
 
 decodeMsg :: (Serializable a) => ByteString -> Either String a
 decodeMsg = left show . des
@@ -68,19 +49,13 @@ decodeMsg = left show . des
 encodeMsg :: (Serializable a) => a -> ByteString
 encodeMsg = ser
 
-decodeSrvMsg :: (Serializable a) => ByteString -> Either String a
-decodeSrvMsg = left show . des
+-- | Main function that updates server Model based on client message and returns response
+processCliMsg :: SockAddr -> CliMsg -> Model -> Model
+processCliMsg cliAddr JOIN      md = insert cliAddr def md
+processCliMsg cliAddr LEAVE     md = delete cliAddr md
+processCliMsg cliAddr GET_STATE md = md
+processCliMsg cliAddr (MOVE d)  md = adjust (moveInDir $ Just d) cliAddr md
 
-encodeSrvMsg :: (Serializable a) => a -> ByteString
-encodeSrvMsg = ser
-
--- | Main function that updates server state based on client message and returns response
-processCliMsg :: SockAddr -> CliMsg -> State -> State
-processCliMsg cliAddr JOIN      state = insert cliAddr def state
-processCliMsg cliAddr LEAVE     state = delete cliAddr state
-processCliMsg cliAddr GET_STATE state = state
-processCliMsg cliAddr (MOVE d)  state = adjust (moveInDir $ Just d) cliAddr state
-
--- | Main function that updates client state based on server message and returns response
+-- | Main function that updates client Model based on server message and returns response
 processSrvMsg :: SockAddr -> SrvMsg -> String
-processSrvMsg srvAddr (PUT_STATE state) =  displayMap state
+processSrvMsg srvAddr (PUT_STATE md) =  displayModel md
