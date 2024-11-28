@@ -14,7 +14,7 @@ import Data.ByteString.Char8 (unpack)
 
 main :: IO ()
 main = do
-  clrScr
+  -- clrScr
   sock <- socket AF_INET Datagram defaultProtocol
   bind sock srvAddr
   listenToClients sock mempty
@@ -28,11 +28,12 @@ listenToClients sock = f
     f clients = do
       logRecv "Listening..."
       (cliMsgRaw, cliAddr) <- recvFrom sock 1024
-      clrScr
+      -- clrScr
       logMsg cliAddr cliMsgRaw
       case decodeMsg cliMsgRaw of
         Left err -> logRecv  (show err)
         Right cliMsg -> do
+          print $ "cliMgs:" <> show cliMsg
           let newClients = processCliMsg cliAddr cliMsg  clients
           logRecv  "Current state:"
           logMsg srvAddr $ encodeMsg $ PUT_STATE newClients
