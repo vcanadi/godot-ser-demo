@@ -1,4 +1,4 @@
-extends Node
+extends CanvasItem
 
 const Net = preload("net/common.gd")
 const Test = preload("net/test.gd")
@@ -24,7 +24,6 @@ func _input(ev):
     # model ... .moveInDir(mdir) # TODO. Move  this client in the local model
     if mdir.con == Net.MaybeDir.Con.Just:
       # If there is some movement, send to server
-      #print(model.display())      # Render local model on key change
       udp.put_packet(Net.CliMsg.ser(Net.CliMsg.MOVE(mdir.fld_Just_0)))
 
 func _process(dt):
@@ -32,8 +31,9 @@ func _process(dt):
     var bs = udp.get_packet()
     var srvMsg:  Net.SrvMsg = Net.SrvMsg.des(bs)
     # print("Srv rsp: %s" % srvMsg.show())
-    model = srvMsg.model # Override model on server update
     print(srvMsg.display())
+    model = srvMsg.model # Override model on server update
+    queue_redraw()
 
 
 static func keyToDir(key: Key) -> Net.MaybeDir:
@@ -44,3 +44,23 @@ static func keyToDir(key: Key) -> Net.MaybeDir:
     KEY_W: return Net.MaybeDir.Just(Net.Dir.U)
     KEY_S: return Net.MaybeDir.Just(Net.Dir.D)
   return Net.MaybeDir.Nothing()
+
+# Visualization of the model
+func _draw():
+  var scale = 50
+  for _j in range(Net.Loc.m):
+    for _i in range(Net.Loc.n):
+      draw_square(scale, Vector2(_i,_j), model.any(func(ci): return ci.snd._mX == _i and ci.snd._mY == _j))
+
+
+# Low-level drawing
+func draw_square(scale: float, v_ :Vector2, chr : bool):
+  var off = Vector2(scale/2,scale/2)
+  var w = 0.95 * scale/2
+  var v = Vector2(v_.x, Net.Loc.n-1-v_.y) * scale
+  draw_polyline([ off + v + Vector2(-w,-w) \
+                , off + v + Vector2(-w, w) \
+                , off + v + Vector2( w, w) \
+                , off + v + Vector2( w,-w) \
+                , off + v + Vector2(-w,-w) \
+                ], Color.WHITE if chr else Color.BLACK, 1)
