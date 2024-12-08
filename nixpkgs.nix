@@ -19,6 +19,7 @@ let
     in
     pkgs.haskellPackages.override { overrides = hpkgs: opkgs:{
          godot-ser = import ./local/godot-ser/default.nix { inherit pkgs hpkgs mkDerivation; };
+         godot-lang = import ./local/godot-lang/default.nix { inherit pkgs hpkgs mkDerivation; };
       };
     };
   };

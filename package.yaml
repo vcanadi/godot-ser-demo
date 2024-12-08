@@ -14,6 +14,7 @@ dependencies:
   - linear
   - lens
   - text
+  - godot-lang
   - godot-ser
   - data-default
   - text
