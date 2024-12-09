@@ -1,11 +1,14 @@
+{-# LANGUAGE PatternSynonyms #-}
+
 module Net.Srv where
 
 import Net.Common
 import Net.Utils
 import Net.Logger
-import Model(displayModel, Model)
+import Model(displayModel, Model, fromNSSockAddr, toNSSockAddr)
 
-import Network.Socket
+import Network.Socket(Socket, socket, Family, pattern AF_INET, pattern Datagram, defaultProtocol)
+import Network.Socket.Address( bind)
 import Network.Socket.ByteString
 import Control.Monad (forever, forM_)
 import Data.Map.Strict (Map, insert, updateAt, adjust, toList)
@@ -14,8 +17,8 @@ import Data.ByteString.Char8 (unpack)
 
 main :: IO ()
 main = do
-  -- clrScr
   sock <- socket AF_INET Datagram defaultProtocol
+  print srvAddr
   bind sock srvAddr
   listenToClients sock mempty
 
@@ -34,10 +37,10 @@ listenToClients sock = f
         Left err -> logRecv  (show err)
         Right cliMsg -> do
           print $ "cliMgs:" <> show cliMsg
-          let newClients = processCliMsg cliAddr cliMsg  clients
+          let newClients = processCliMsg (fromNSSockAddr cliAddr) cliMsg  clients
           logRecv  "Current state:"
           logMsg srvAddr $ encodeMsg $ PUT_STATE newClients
           putStrLn $ displayModel newClients
           forM_ (toList newClients) $ \(cl,_) ->
-            sendTo sock (encodeMsg $ PUT_STATE newClients) cl
+            sendTo sock (encodeMsg $ PUT_STATE newClients) (toNSSockAddr cl)
           f newClients

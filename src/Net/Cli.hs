@@ -29,6 +29,7 @@ import Text.Read(readMaybe)
 import Data.ByteString.Char8(unpack)
 import Control.Monad(forever, void)
 import Control.Arrow ((>>>))
+import Model (toNSSockAddr, fromNSSockAddr)
 
 
 main :: IO ()
@@ -47,7 +48,7 @@ sendThread sock =
     (getChar >>=) $ charToCliMsg >>> \case
       Left err -> logSend err
       Right cliMsg -> do
-        bytesSent <- sendTo sock (encodeMsg cliMsg) srvAddr
+        bytesSent <- sendTo sock (encodeMsg cliMsg) (toNSSockAddr srvAddr)
         logSend $ "Send nbr of bytes: " <> show bytesSent
 
 -- | Recieving and sending thread. Listens for an incoming messages and
@@ -61,5 +62,5 @@ recvThread sock =
     case decodeMsg srvMsgRaw of
       Left err -> logRecv (show err)
       Right srvMsg -> do
-        let msg = processSrvMsg srvAddr srvMsg
+        let msg = processSrvMsg (fromNSSockAddr srvAddr) srvMsg
         putStrLn msg
