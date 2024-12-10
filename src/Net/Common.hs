@@ -14,9 +14,9 @@ import Data.ByteString.Char8(unpack)
 import Data.ByteString.UTF8 (fromString)
 import GHC.Generics (Generic)
 import Control.Arrow (ArrowChoice(left))
-import Model ( Loc, Dir(..), displayModel, moveInDir, Model, readDir, SockAddr (..), HostAddress, fromNSSockAddr )
+import Model ( Loc, Dir(..), displayModel, moveInDir, Model, readDir, SockAddr (..), HostAddress, fromNSSockAddr , Player(Player), playerLoc, modelPlayers, _modelNextNm, modelNextNm)
 import Data.Default ( Default(def) )
-import Control.Lens ((%~))
+import Control.Lens ((%~), (&))
 import Data.Maybe (fromJust)
 import Data.List (elemIndex)
 import Data.Godot.Serialize ( Serializable(ser, des) )
@@ -64,7 +64,7 @@ srvMsgDisplayFuncBody =
   var s: String = ""
   for _j in range(Loc.m-1,-1,-1):
     for _i in range(Loc.n):
-      s += ("X" if model.any(func(ci): return ci.snd.i == _i and ci.snd.j == _j) else " ") + "|"
+      s += ("X" if model._modelPlayers.any(func(ci): return ci.snd._playerLoc.i == _i and ci.snd._playerLoc.j == _j) else " ") + "|"
     s+="\\n"
   return s
   |]
@@ -77,10 +77,11 @@ encodeMsg = ser
 
 -- | Main function that updates server Model based on client message and returns response
 processCliMsg :: SockAddr -> CliMsg -> Model -> Model
-processCliMsg cliAddr JOIN      md = insert cliAddr def md
-processCliMsg cliAddr LEAVE     md = delete cliAddr md
-processCliMsg cliAddr GET_STATE md = md
-processCliMsg cliAddr (MOVE d)  md = adjust (moveInDir $ Just d) cliAddr md
+processCliMsg cliAddr JOIN      = \md -> md & modelPlayers %~ insert cliAddr (Player def (_modelNextNm md))
+                                            & modelNextNm %~ succ
+processCliMsg cliAddr LEAVE     = modelPlayers %~ delete cliAddr
+processCliMsg cliAddr GET_STATE = id
+processCliMsg cliAddr (MOVE d)  = modelPlayers %~ adjust (playerLoc %~ moveInDir (Just d)) cliAddr
 
 -- | Main function that updates client Model based on server message and returns response
 processSrvMsg :: SockAddr -> SrvMsg -> String

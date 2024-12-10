@@ -5,7 +5,7 @@
 
 module Model where
 
-import Data.List (intercalate, intersperse)
+import Data.List (intercalate, intersperse, find)
 import GHC.Generics (Generic (from), Rep)
 import Data.Default (Default (def))
 import Control.Lens.TH ( makeLenses )
@@ -59,16 +59,11 @@ instance SocketAddress SockAddr where
 instance Serializable SockAddr
 instance ToDC SockAddr
 
--- | State of the game (client info and board coordinates)
-type Model = Map SockAddr Loc
-
 data Dir = L | R | U | D deriving (Show, Eq, Generic, Enum, Bounded, Read)
 
 instance Serializable Dir
 instance ToDC Dir
 instance ToDC (Maybe Dir)
-
--- data Player = Player { playerLoc :: Loc } deriving (Show,Eq, Generic, Serializable)
 
 data Loc = Loc
   { i :: Int
@@ -102,14 +97,33 @@ locDisplayFuncBody =
   return s
   |]
 
+data Player = Player { _playerLoc :: Loc, _playerNm :: Int } deriving (Show,Eq, Generic)
+
+$(makeLenses ''Player)
+
+instance Serializable Player
+instance ToDC Player
+instance Default Player where def = Player def 0
+
+-- | State of the game (client info and board coordinates)
+data Model = Model
+  { _modelPlayers :: Map SockAddr Player
+  , _modelNextNm :: Int
+  } deriving (Show,Eq,Generic)
+
+$(makeLenses ''Model)
+
+instance Serializable Model
+instance ToDC Model
+
 displayModel :: Model -> String
-displayModel state  = show state <> concat
+displayModel (Model players _)  = show players <> concat
   [ concat
     [ displayField i j
     | i <- [0..pred n]] <> "\n"
   | j<- reverse [0..pred m]]
   where
-    displayField i j= if Loc i j `notElem` elems state then "_" else "X"
+    displayField i j= maybe "_" (show . _playerNm) $ find ((Loc i j ==) . _playerLoc) (elems players)
 
 displayLoc :: Loc -> String
 displayLoc (Loc i0 j0) = concat

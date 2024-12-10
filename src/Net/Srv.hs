@@ -5,7 +5,7 @@ module Net.Srv where
 import Net.Common
 import Net.Utils
 import Net.Logger
-import Model(displayModel, Model, fromNSSockAddr, toNSSockAddr)
+import Model(displayModel, Model (Model), fromNSSockAddr, toNSSockAddr, _modelPlayers)
 
 import Network.Socket(Socket, socket, Family, pattern AF_INET, pattern Datagram, defaultProtocol)
 import Network.Socket.Address( bind)
@@ -20,7 +20,7 @@ main = do
   sock <- socket AF_INET Datagram defaultProtocol
   print srvAddr
   bind sock srvAddr
-  listenToClients sock mempty
+  listenToClients sock (Model mempty 0)
 
 -- | For a given socket and a current client list,
 -- listen to client messages and update state accordingly
@@ -28,7 +28,7 @@ main = do
 listenToClients :: Socket -> Model -> IO ()
 listenToClients sock = f
   where
-    f clients = do
+    f model = do
       logRecv "Listening..."
       (cliMsgRaw, cliAddr) <- recvFrom sock 1024
       -- clrScr
@@ -37,10 +37,10 @@ listenToClients sock = f
         Left err -> logRecv  (show err)
         Right cliMsg -> do
           print $ "cliMgs:" <> show cliMsg
-          let newClients = processCliMsg (fromNSSockAddr cliAddr) cliMsg  clients
+          let newModel = processCliMsg (fromNSSockAddr cliAddr) cliMsg  model
           logRecv  "Current state:"
-          logMsg srvAddr $ encodeMsg $ PUT_STATE newClients
-          putStrLn $ displayModel newClients
-          forM_ (toList newClients) $ \(cl,_) ->
-            sendTo sock (encodeMsg $ PUT_STATE newClients) (toNSSockAddr cl)
-          f newClients
+          logMsg srvAddr $ encodeMsg $ PUT_STATE newModel
+          putStrLn $ displayModel newModel
+          forM_ (toList $ _modelPlayers newModel) $ \(cl,_) ->
+            sendTo sock (encodeMsg $ PUT_STATE newModel) (toNSSockAddr cl)
+          f newModel

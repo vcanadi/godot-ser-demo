@@ -148,6 +148,161 @@ class MaybeDir extends Object:
       
 
 
+class Model extends Object:
+
+  class P_SockAddr_Player_P extends Object:
+  
+  
+    var fst: SockAddr
+    var snd: Player
+  
+    #  Equality check on type: P_SockAddr_Player_P 
+    static func eq(a: P_SockAddr_Player_P, b: P_SockAddr_Player_P) -> bool:
+      return SockAddr.eq(a.fst, b.fst) && Player.eq(a.snd, b.snd) 
+    
+    
+    #  Non-static equality check of two P_SockAddr_Player_P 
+    func eq1(b: P_SockAddr_Player_P) -> bool:
+      return P_SockAddr_Player_P.eq(self, b) 
+    
+    
+    # Constructor function for sum constructor P
+    static func P(fst: SockAddr, snd: Player) -> P_SockAddr_Player_P:
+      var ret: P_SockAddr_Player_P = P_SockAddr_Player_P.new() 
+      ret.fst = fst
+      ret.snd = snd
+      return ret 
+    
+    
+    # String representation of type
+    func show() -> String:
+      return "P" 
+    
+    
+    # Deserialize from binary
+    static func des(this: PackedByteArray) -> P_SockAddr_Player_P:
+      return desFromArr(bytes_to_var(this)) 
+    
+    
+    # Deserialize from array
+    static func desFromArr(arr: Array[Variant]) -> P_SockAddr_Player_P:
+      var ret: P_SockAddr_Player_P = P_SockAddr_Player_P.new() 
+      ret.fst = SockAddr.desFromArr(arr[0])
+      ret.snd = Player.desFromArr(arr[1])
+      return ret 
+    
+    
+    # Serialize to binary
+    static func ser(this: P_SockAddr_Player_P) -> PackedByteArray:
+      return var_to_bytes(serToArr(this)) 
+    
+    
+    # Serialize to array
+    static func serToArr(this: P_SockAddr_Player_P) -> Array[Variant]:
+      return [ SockAddr.serToArr(this.fst), Player.serToArr(this.snd) ]  
+
+
+  var _modelPlayers: Array[P_SockAddr_Player_P]
+  var _modelNextNm: int
+
+  #  Equality check on type: Model 
+  static func eq(a: Model, b: Model) -> bool:
+    return a._modelPlayers.reduce(func(acc,x): return [ acc[0] && P_SockAddr_Player_P.eq(x, b._modelPlayers[acc[1]]), acc[1] + 1 ] , [true, 0])[0] && a._modelNextNm==b._modelNextNm 
+  
+  
+  #  Non-static equality check of two Model 
+  func eq1(b: Model) -> bool:
+    return Model.eq(self, b) 
+  
+  
+  # Constructor function for sum constructor Model
+  static func Model(_modelPlayers: Array[P_SockAddr_Player_P], _modelNextNm: int) -> Model:
+    var ret: Model = Model.new() 
+    ret._modelPlayers = _modelPlayers
+    ret._modelNextNm = _modelNextNm
+    return ret 
+  
+  
+  # String representation of type
+  func show() -> String:
+    return "Model" 
+  
+  
+  # Deserialize from binary
+  static func des(this: PackedByteArray) -> Model:
+    return desFromArr(bytes_to_var(this)) 
+  
+  
+  # Deserialize from array
+  static func desFromArr(arr: Array[Variant]) -> Model:
+    var ret: Model = Model.new() 
+    ret._modelPlayers.assign(arr[0].map(P_SockAddr_Player_P.desFromArr))
+    ret._modelNextNm = arr[1]
+    return ret 
+  
+  
+  # Serialize to binary
+  static func ser(this: Model) -> PackedByteArray:
+    return var_to_bytes(serToArr(this)) 
+  
+  
+  # Serialize to array
+  static func serToArr(this: Model) -> Array[Variant]:
+    return [ this._modelPlayers.map(func(x): return P_SockAddr_Player_P.serToArr(x)), this._modelNextNm ]  
+
+
+class Player extends Object:
+
+
+  var _playerLoc: Loc
+  var _playerNm: int
+
+  #  Equality check on type: Player 
+  static func eq(a: Player, b: Player) -> bool:
+    return Loc.eq(a._playerLoc, b._playerLoc) && a._playerNm==b._playerNm 
+  
+  
+  #  Non-static equality check of two Player 
+  func eq1(b: Player) -> bool:
+    return Player.eq(self, b) 
+  
+  
+  # Constructor function for sum constructor Player
+  static func Player(_playerLoc: Loc, _playerNm: int) -> Player:
+    var ret: Player = Player.new() 
+    ret._playerLoc = _playerLoc
+    ret._playerNm = _playerNm
+    return ret 
+  
+  
+  # String representation of type
+  func show() -> String:
+    return "Player" 
+  
+  
+  # Deserialize from binary
+  static func des(this: PackedByteArray) -> Player:
+    return desFromArr(bytes_to_var(this)) 
+  
+  
+  # Deserialize from array
+  static func desFromArr(arr: Array[Variant]) -> Player:
+    var ret: Player = Player.new() 
+    ret._playerLoc = Loc.desFromArr(arr[0])
+    ret._playerNm = arr[1]
+    return ret 
+  
+  
+  # Serialize to binary
+  static func ser(this: Player) -> PackedByteArray:
+    return var_to_bytes(serToArr(this)) 
+  
+  
+  # Serialize to array
+  static func serToArr(this: Player) -> Array[Variant]:
+    return [ Loc.serToArr(this._playerLoc), this._playerNm ]  
+
+
 class SockAddr extends Object:
 
   enum Con { SockAddrInet, SockAddrDummy }
@@ -344,59 +499,8 @@ class CliMsg extends Object:
 
 class SrvMsg extends Object:
 
-  class P_SockAddr_Loc_P extends Object:
-  
-  
-    var fst: SockAddr
-    var snd: Loc
-  
-    #  Equality check on type: P_SockAddr_Loc_P 
-    static func eq(a: P_SockAddr_Loc_P, b: P_SockAddr_Loc_P) -> bool:
-      return SockAddr.eq(a.fst, b.fst) && Loc.eq(a.snd, b.snd) 
-    
-    
-    #  Non-static equality check of two P_SockAddr_Loc_P 
-    func eq1(b: P_SockAddr_Loc_P) -> bool:
-      return P_SockAddr_Loc_P.eq(self, b) 
-    
-    
-    # Constructor function for sum constructor P
-    static func P(fst: SockAddr, snd: Loc) -> P_SockAddr_Loc_P:
-      var ret: P_SockAddr_Loc_P = P_SockAddr_Loc_P.new() 
-      ret.fst = fst
-      ret.snd = snd
-      return ret 
-    
-    
-    # String representation of type
-    func show() -> String:
-      return "P" 
-    
-    
-    # Deserialize from binary
-    static func des(this: PackedByteArray) -> P_SockAddr_Loc_P:
-      return desFromArr(bytes_to_var(this)) 
-    
-    
-    # Deserialize from array
-    static func desFromArr(arr: Array[Variant]) -> P_SockAddr_Loc_P:
-      var ret: P_SockAddr_Loc_P = P_SockAddr_Loc_P.new() 
-      ret.fst = SockAddr.desFromArr(arr[0])
-      ret.snd = Loc.desFromArr(arr[1])
-      return ret 
-    
-    
-    # Serialize to binary
-    static func ser(this: P_SockAddr_Loc_P) -> PackedByteArray:
-      return var_to_bytes(serToArr(this)) 
-    
-    
-    # Serialize to array
-    static func serToArr(this: P_SockAddr_Loc_P) -> Array[Variant]:
-      return [ SockAddr.serToArr(this.fst), Loc.serToArr(this.snd) ]  
 
-
-  var model: Array[P_SockAddr_Loc_P]
+  var model: Model
 
   # TODO: Add comment
   func display() -> String:
@@ -404,7 +508,7 @@ class SrvMsg extends Object:
       var s: String = ""
       for _j in range(Loc.m-1,-1,-1):
         for _i in range(Loc.n):
-          s += ("X" if model.any(func(ci): return ci.snd.i == _i and ci.snd.j == _j) else " ") + "|"
+          s += ("X" if model._modelPlayers.any(func(ci): return ci.snd._playerLoc.i == _i and ci.snd._playerLoc.j == _j) else " ") + "|"
         s+="\n"
       return s
       
@@ -412,7 +516,7 @@ class SrvMsg extends Object:
   
   #  Equality check on type: SrvMsg 
   static func eq(a: SrvMsg, b: SrvMsg) -> bool:
-    return a.model.reduce(func(acc,x): return [ acc[0] && P_SockAddr_Loc_P.eq(x, b.model[acc[1]]), acc[1] + 1 ] , [true, 0])[0] 
+    return Model.eq(a.model, b.model) 
   
   
   #  Non-static equality check of two SrvMsg 
@@ -421,7 +525,7 @@ class SrvMsg extends Object:
   
   
   # Constructor function for sum constructor PUT_STATE
-  static func PUT_STATE(model: Array[P_SockAddr_Loc_P]) -> SrvMsg:
+  static func PUT_STATE(model: Model) -> SrvMsg:
     var ret: SrvMsg = SrvMsg.new() 
     ret.model = model
     return ret 
@@ -440,7 +544,7 @@ class SrvMsg extends Object:
   # Deserialize from array
   static func desFromArr(arr: Array[Variant]) -> SrvMsg:
     var ret: SrvMsg = SrvMsg.new() 
-    ret.model.assign(arr.map(P_SockAddr_Loc_P.desFromArr))
+    ret.model = Model.desFromArr(arr)
     return ret 
   
   
@@ -451,4 +555,4 @@ class SrvMsg extends Object:
   
   # Serialize to array
   static func serToArr(this: SrvMsg) -> Array[Variant]:
-    return this.model.map(func(x): return P_SockAddr_Loc_P.serToArr(x)) 
+    return Model.serToArr(this.model) 
