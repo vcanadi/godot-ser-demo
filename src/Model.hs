@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Model where
 
@@ -65,6 +66,7 @@ data Dir = L | R | U | D deriving (Show, Eq, Generic, Enum, Bounded, Read)
 
 instance Serializable Dir
 instance ToDC Dir
+instance ToDC (Maybe Dir)
 
 -- data Player = Player { playerLoc :: Loc } deriving (Show,Eq, Generic, Serializable)
 

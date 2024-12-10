@@ -5,12 +5,27 @@
 
 module Net.TH where
 
+import System.Directory (getCurrentDirectory)
 import Godot.Lang.TH
-import Godot.Lang.Class (ToDC)
+import Godot.Lang.Class ( ToDC, toGDScriptExtra )
 import Net.Common
 import Model
+import Data.Proxy (Proxy(Proxy))
+-- import Language.Haskell.TH
 
 -- Add any addition instances Of ToDC
-instance ToDC (Maybe Dir)
 
-$(allToDCInsts)
+-- | Generate code:
+-- newtype AllToDCInsts = [...type level list of all ToDC instances...]
+$(qAllToDCInsts)
+
+-- | Generate gd files with runhaskell
+main :: IO ()
+main = toGDScriptExtra "gd/src/net" (Proxy @AllToDCInsts)
+
+-- | Run during compilation 'toGDScriptExtra "common" (Proxy @AllToDCInsts)' to generate godot file
+-- $(runIO $ do putStrLn "START"
+--              getCurrentDirectory >>= putStrLn
+--              putStrLn "END" >> toGDScriptExtra "/tmp" (Proxy @AllToDCInsts)
+--              pure []
+--  )
