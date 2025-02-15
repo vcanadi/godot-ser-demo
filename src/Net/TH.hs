@@ -5,7 +5,6 @@
 
 module Net.TH where
 
-import System.Directory (getCurrentDirectory)
 import Godot.Lang.TH
 import Godot.Lang.Class ( ToDC, toGDScriptExtra )
 import Net.Common
