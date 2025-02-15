@@ -18,8 +18,17 @@ let
         });
     in
     pkgs.haskellPackages.override { overrides = hpkgs: opkgs:{
-         godot-ser = import ./local/godot-ser/default.nix { inherit pkgs hpkgs mkDerivation; };
-         godot-lang = import ./local/godot-lang/default.nix { inherit pkgs hpkgs mkDerivation; };
+         godot-ser = import (builtins.fetchGit {
+           url = "git@github.com:vcanadi/godot-ser";
+           rev = "f95dfa6b048711514de5a8f3b0bc09665103a62c";
+           allRefs = true;
+          }) { inherit pkgs hpkgs mkDerivation; };
+
+         godot-lang = import (builtins.fetchGit {
+           url = "git@github.com:vcanadi/godot-lang";
+           rev = "ac46b4dc6affce0c1c782396d2532bb9c4a9eb4f";
+           allRefs = true;
+          }) { inherit pkgs hpkgs mkDerivation; };
       };
     };
   };
